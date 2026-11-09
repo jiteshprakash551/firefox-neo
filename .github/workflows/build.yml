@@ -1,0 +1,37 @@
+name: build-neo
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk + swap
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/lib/android /usr/lib/jvm/temurin-8* 2>/dev/null || true
+          sudo swapoff -a; sudo fallocate -l 8G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+          df -h /; free -g
+      - name: Clone Mozilla source (shallow)
+        run: git clone --depth 1 https://github.com/mozilla-firefox/firefox.git ff && git -C ff log -1 --format='%H %cd' | tee ff-rev.txt
+      - name: Apply Neo patches + branding
+        run: |
+          pip install pillow
+          python3 neo/patch.py ff
+          python3 neo/brand.py ff/mobile/android/fenix/app/src/release/res
+      - name: Bootstrap (artifact mode)
+        run: |
+          cd ff && cp ../neo/mozconfig mozconfig
+          ./mach --no-interactive bootstrap --application-choice mobile_android_artifact_mode || ./mach --no-interactive bootstrap --application-choice "GeckoView/Firefox for Android Artifact Mode"
+          df -h /
+      - name: Build (artifact GeckoView)
+        run: cd ff && ./mach build
+      - name: Gradle assembleRelease
+        run: cd ff && ./mach gradle -p mobile/android/fenix app:assembleRelease -PdisableOptimization=false
+      - name: Collect
+        run: |
+          mkdir -p out && find ff -name '*.apk' -path '*release*' | tee out/apks.txt
+          find ff -name '*.apk' -path '*release*' -exec cp {} out/ \;
+          cp ff-rev.txt out/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: neo-out, path: out/, retention-days: 3 }
