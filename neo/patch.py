@@ -68,3 +68,7 @@ def glass(s):
     s = s.replace('<color name="fx_mobile_primary">@color/novaViolet20</color>', '<color name="fx_mobile_primary">#ff8fd9ff</color>')
     return s
 edit(night, glass, "translucent raised surfaces + cyan accent")
+
+# ---- manifest: no shared UID with Mozilla's Firefox
+mf = fx / "src/main/AndroidManifest.xml"
+edit(mf, lambda s: re.sub(r'\s*android:sharedUserId="\$\{sharedUserId\}"', '', s), "manifest sharedUserId removed")
