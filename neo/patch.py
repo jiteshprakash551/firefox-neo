@@ -70,5 +70,5 @@ def glass(s):
 edit(night, glass, "translucent raised surfaces + cyan accent")
 
 # ---- manifest: no shared UID with Mozilla's Firefox
-mf = fx / "src/main/AndroidManifest.xml"
+mf = fx / "src/release/AndroidManifest.xml"
 edit(mf, lambda s: re.sub(r'\s*android:sharedUserId="\$\{sharedUserId\}"', '', s), "manifest sharedUserId removed")
