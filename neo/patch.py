@@ -72,7 +72,9 @@ edit(mw, lambda s: s.replace("        val nimbus = context.components.nimbus\n\n
 ab = fx/"src/main/java/org/mozilla/fenix/settings/about/AboutFragment.kt"
 def about(s):
     n = s.replace("SupportUtils.WHATS_NEW_URL,", '"https://github.com/jiteshprakash551/neo-browser",', 1)
-    n = n.replace("getString(R.string.about_whats_new, getString(R.string.firefox)),", '"Source code and changes",', 1)
+    n = n.replace("getString(R.string.about_whats_new, getString(R.string.firefox)),", 'getString(R.string.about_whats_new, getString(R.string.app_name)),', 1)
+    n = n.replace("getString(R.string.about_content, appName)", 'getString(R.string.about_content)', 1)
+    assert 'getString(R.string.about_content)' in n
     n = n.replace("SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.HELP),", '"https://github.com/jiteshprakash551/neo-browser/issues",', 1)
     n = n.replace("SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVACY_NOTICE),", '"https://github.com/jiteshprakash551/neo-browser/blob/main/PRIVACY.md",', 1)
     n = n.replace("SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS),", '"https://www.mozilla.org/MPL/2.0/",', 1)

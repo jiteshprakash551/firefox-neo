@@ -60,6 +60,13 @@ jobs:
         run: |
           T=$(grep -oE "^test[A-Za-z]*UnitTest" test-tasks.txt | head -1); echo "task=$T"
           cd ff && ./mach gradle -p mobile/android/fenix app:$T --tests '*SettingsTest' 2>&1 | tail -60 | tee ../test-tail.txt
+      - name: Collect unit test reports
+        if: always()
+        run: |
+          mkdir -p reports/tests
+          find ff/objdir-neo/gradle/build/mobile/android/fenix/app/build/test-results -name '*.xml' -exec cp {} reports/tests/ \; 2>/dev/null || true
+          find ff -path '*test-results*' -name 'TEST-*.xml' 2>/dev/null | head -40 | xargs -I{} cp {} reports/tests/ 2>/dev/null || true
+          ls -la reports/tests | head
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
