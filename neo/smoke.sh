@@ -5,12 +5,12 @@ mkdir -p smoke-out; cd "$GITHUB_WORKSPACE"
 APK=$(ls out/app-x86_64-release.apk)
 $ANDROID_HOME/build-tools/*/aapt2 dump badging "$APK" | grep -E "package:|application-label:|launchable" | tee -a smoke-out/result.txt
 adb install -r "$APK" 2>&1 | tee -a smoke-out/result.txt
-PKG=$(aapt2_pkg=$($ANDROID_HOME/build-tools/*/aapt2 dump badging "$APK" | sed -n "s/package: name='\([^']*\)'.*/\1/p"); echo $aapt2_pkg)
+PKG=np.com.jiteshprakash.neo
 echo "PKG=$PKG" | tee -a smoke-out/result.txt
 adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS 2>/dev/null
 adb logcat -c
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 | tee -a smoke-out/result.txt
-sleep 25
+sleep 30
 adb exec-out screencap -p > smoke-out/01-first-launch.png
 adb shell dumpsys activity activities | grep -m3 -i "mResumedActivity\|topResumedActivity" | tee -a smoke-out/result.txt
 adb shell pidof "$PKG" | tee -a smoke-out/result.txt
