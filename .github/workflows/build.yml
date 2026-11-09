@@ -13,8 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [aarch64, x86_64]
-    if: ${{ !(inputs.only_x86 == 'true' && matrix.target == 'aarch64') }}
+        target: ${{ fromJSON(inputs.only_x86 == 'true' && '["x86_64"]' || '["aarch64","x86_64"]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 340
     steps:
