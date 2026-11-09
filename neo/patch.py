@@ -90,6 +90,8 @@ def about_layout(s):
     blk = s[i:j].replace('android:layout_width="wrap_content"', 'android:layout_width="0dp"', 1).replace('layout_constraintWidth_percent="0.8"', 'layout_constraintWidth_percent="0.92"', 1).replace('style="@style/Header16TextStyle"', 'style="@style/AboutHeaderContentText"', 1)
     return s[:i] + blk + s[j:]
 edit(al, about_layout, "About layout: wide readable credit block")
+dm = fx/"src/main/res/values/dimens.xml"
+edit(dm, lambda s: s.replace('<dimen name="about_header_title_padding_start_end">84dp</dimen>', '<dimen name="about_header_title_padding_start_end">16dp</dimen>', 1), "About credit block side padding 84dp -> 16dp")
 for f in glob.glob(str(fx/"src/main/res/values-*/strings.xml")):
     p = pathlib.Path(f); s = p.read_text(encoding="utf-8")
     n = re.sub(r'\s*<string name="about_content"[^>]*>.*?</string>', '', s, flags=re.S)
