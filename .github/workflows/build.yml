@@ -21,7 +21,8 @@ jobs:
       - name: Bootstrap (artifact mode)
         run: |
           cd ff && cp ../neo/mozconfig mozconfig
-          ./mach --no-interactive bootstrap --application-choice mobile_android_artifact_mode || ./mach --no-interactive bootstrap --application-choice "GeckoView/Firefox for Android Artifact Mode"
+          for i in 1 2 3 4 5 6; do ./mach --no-interactive bootstrap --application-choice mobile_android_artifact_mode && break; echo "bootstrap retry $i"; sleep 60; done
+          test -d ~/.mozbuild
           df -h /
       - name: Build (artifact GeckoView)
         run: cd ff && ./mach build

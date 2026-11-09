@@ -51,3 +51,20 @@ for f in glob.glob(str(fx/"src/main/res/values-*/strings.xml")):
     n = re.sub(r'\s*<string name="about_content"[^>]*>.*?</string>', '', s, flags=re.S)
     if n != s: p.write_text(n, encoding="utf-8")
 print("ok: localized about_content removed")
+
+# ---- Glass-inspired dark palette: blue-tinted "ink" grays + translucent raised surfaces (no real blur)
+nova = root / "mobile/android/android-components/components/ui/colors/src/main/res/values/nova_colors.xml"
+ink = {90:"ff0a0c18",85:"ff0d1020",80:"ff11152a",75:"ff151a33",70:"ff1b2140",65:"ff232a4d",60:"ff2e3660",55:"ff3d4672"}
+def tint(s):
+    for k, v in ink.items():
+        s = re.sub(r'(<color name="novaGray%d">#)[0-9a-fA-F]{8}' % k, r'\g<1>%s' % v, s)
+    return s
+edit(nova, tint, "ink-tinted dark grays")
+night = fx / "src/main/res/values-night/colors.xml"
+def glass(s):
+    s = s.replace('<color name="fx_mobile_surface_container_high">@color/novaGray70</color>', '<color name="fx_mobile_surface_container_high">#F21b2140</color>')
+    s = s.replace('<color name="fx_mobile_surface_container_highest">@color/novaGray65</color>', '<color name="fx_mobile_surface_container_highest">#EB232a4d</color>')
+    s = s.replace('<color name="fx_mobile_surface_bright">@color/novaGray65</color>', '<color name="fx_mobile_surface_bright">#EB232a4d</color>')
+    s = s.replace('<color name="fx_mobile_primary">@color/novaViolet20</color>', '<color name="fx_mobile_primary">#ff8fd9ff</color>')
+    return s
+edit(night, glass, "translucent raised surfaces + cyan accent")
