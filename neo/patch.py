@@ -54,6 +54,20 @@ print("ok: Firefox->Neo in", cnt, "string files")
 # ---- Mozilla-specific onboarding (Mozilla ToU, data sharing, marketing, sync) is skipped
 edit(st, lambda s: s.replace("if (isBenchmarkBuild && !forceOnboardingForBenchmark) {", "if (isBenchmarkBuild || !forceOnboardingForBenchmark) {"), "skip Mozilla onboarding flow")
 
+# ---- hide Mozilla-specific settings entries: Play Store rating (Mozilla listing) and Nimbus "remote improvements"
+prefx = fx/"src/main/res/xml/preferences.xml"
+def hide(key):
+    def f(s):
+        return s.replace('android:key="@string/%s"' % key, 'android:key="@string/%s"\n            app:isPreferenceVisible="false"' % key, 1)
+    return f
+edit(prefx, hide("pref_key_rate"), "hide Rate on Google Play")
+edit(prefx, hide("pref_key_remote_improvements"), "hide Remote improvements (Nimbus rollouts)")
+edit(st, lambda s: s.replace("default = { appContext.components.nimbus.sdk.rolloutParticipation },", "default = { false },"), "rollouts default OFF")
+
+# ---- no periodic Nimbus experiment/message fetch from Mozilla servers while experimentation is off
+mw = fx/"src/main/java/org/mozilla/fenix/messaging/MessageNotificationWorker.kt"
+edit(mw, lambda s: s.replace("        val nimbus = context.components.nimbus\n\n        // Refresh messages", "        val nimbus = context.components.nimbus\n        if (!context.components.settings.isExperimentationEnabled) return Result.success()\n\n        // Refresh messages", 1), "MessageNotificationWorker: no Nimbus fetch when experimentation off")
+
 # ---- names & About
 for f in [fx/"src/release/res/values/static_strings.xml", fx/"src/main/res/values/static_strings.xml", fx/"src/beta/res/values/static_strings.xml", fx/"src/nightly/res/values/static_strings.xml"]:
     edit(f, sub1(r'(<string name="app_name" translatable="false">)[^<]*(</string>)', r'\1' + NAME + r'\2'), "app_name -> Firefox Neo")
