@@ -52,7 +52,22 @@ for f in glob.glob(str(fx/"src/main/res/values*/strings.xml")):
 assert cnt > 50, "string rebrand touched too few files"
 print("ok: Firefox->Neo in", cnt, "string files")
 # ---- Mozilla-specific onboarding (Mozilla ToU, data sharing, marketing, sync) is skipped
-edit(st, lambda s: s.replace("if (isBenchmarkBuild && !forceOnboardingForBenchmark) {", "if (isBenchmarkBuild || !forceOnboardingForBenchmark) {"), "skip Mozilla onboarding flow")
+edit(st, lambda s: s.replace("if (isBenchmarkBuild && !forceOnboardingForBenchmark) {", "if (!forceOnboardingForBenchmark) {"), "skip Mozilla onboarding flow (force flag still works)")
+
+# ---- unit tests: assert the intended Neo defaults instead of upstream defaults
+stt = fx/"src/test/java/org/mozilla/fenix/utils/SettingsTest.kt"
+def test_asserts(s):
+    n = s.replace("assertTrue(settings.isTelemetryEnabled)", "assertFalse(settings.isTelemetryEnabled)", 1)
+    n = n.replace("assertFalse(settings.shouldUseDarkTheme)", "assertTrue(settings.shouldUseDarkTheme)", 1)
+    n = n.replace("assertFalse(settings.shouldUseOledTheme)", "assertTrue(settings.shouldUseOledTheme)", 1)
+    n = n.replace("assertFalse(settings.useStrictTrackingProtection)", "assertTrue(settings.useStrictTrackingProtection)", 1)
+    n = n.replace("assertTrue(settings.shouldShowSearchSuggestions)", "assertFalse(settings.shouldShowSearchSuggestions)", 1)
+    n = n.replace("assertFalse(settings.shouldUseHttpsOnly)", "assertTrue(settings.shouldUseHttpsOnly)", 1)
+    n = n.replace("assertTrue(actual)", "assertFalse(actual)")
+    for want in ["assertFalse(settings.isTelemetryEnabled)", "assertTrue(settings.useStrictTrackingProtection)", "assertTrue(settings.shouldUseHttpsOnly)"]:
+        assert want in n, want
+    return n
+edit(stt, test_asserts, "SettingsTest: assert Neo privacy defaults (telemetry/suggestions off, dark+OLED+strict ETP+HTTPS-only on, Mozilla onboarding skipped)")
 
 # ---- hide Mozilla-specific settings entries: Play Store rating (Mozilla listing) and Nimbus "remote improvements"
 prefx = fx/"src/main/res/xml/preferences.xml"
