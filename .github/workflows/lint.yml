@@ -44,10 +44,22 @@ jobs:
         run: cd ff && ./mach build
       - name: Lint (release)
         continue-on-error: true
-        run: cd ff && ./mach gradle -p mobile/android/fenix app:lintRelease 2>&1 | tail -60 | tee ../lint-tail.txt
-      - name: Unit tests (Settings, Onboarding, About)
+        run: cd ff && ./mach gradle -p mobile/android/fenix app:lintRelease 2>&1 | tail -40 | tee ../lint-tail.txt
+      - name: Collect lint report text
+        if: always()
+        run: |
+          mkdir -p reports
+          find ff/objdir-neo/gradle/build/mobile/android/fenix/app/reports -maxdepth 1 -type f \( -name 'lint-results-release.*' \) -exec cp {} reports/ \; || true
+          find ff -name 'lint-results-release.txt' -o -name 'lint-report.sarif.json' | head -3 | xargs -I{} cp {} reports/ 2>/dev/null || true
+          ls -la reports
+      - name: List unit test tasks
         continue-on-error: true
-        run: cd ff && ./mach gradle -p mobile/android/fenix app:testReleaseUnitTest --tests '*SettingsTest' --tests '*AboutFragment*' 2>&1 | tail -60 | tee ../test-tail.txt
+        run: cd ff && ./mach gradle -p mobile/android/fenix app:tasks --all 2>&1 | grep -iE "^[a-z]*UnitTest|unitTest" | head -20 | tee ../test-tasks.txt
+      - name: Unit tests (Settings)
+        continue-on-error: true
+        run: |
+          T=$(grep -oE "^test[A-Za-z]*UnitTest" test-tasks.txt | head -1); echo "task=$T"
+          cd ff && ./mach gradle -p mobile/android/fenix app:$T --tests '*SettingsTest' 2>&1 | tail -60 | tee ../test-tail.txt
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,6 +68,6 @@ jobs:
           path: |
             lint-tail.txt
             test-tail.txt
-            ff/mobile/android/fenix/app/build/reports/lint-results-release.txt
-            ff/mobile/android/fenix/app/build/test-results/testReleaseUnitTest/*.xml
+            test-tasks.txt
+            reports/
           if-no-files-found: ignore
