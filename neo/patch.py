@@ -73,3 +73,20 @@ edit(night, glass, "translucent raised surfaces + cyan accent")
 # ---- manifest: no shared UID with Mozilla's Firefox
 mf = fx / "src/release/AndroidManifest.xml"
 edit(mf, lambda s: re.sub(r'\s*android:sharedUserId="\$\{sharedUserId\}"', '', s), "manifest sharedUserId removed")
+
+# ---- manifest: strip ad/attribution/push permissions + Adjust receiver
+mm = fx / "src/main/AndroidManifest.xml"
+def strip_perms(s):
+    s = s.replace('<uses-permission android:name="com.adjust.preinstall.READ_PERMISSION"/>',
+        '<uses-permission android:name="com.adjust.preinstall.READ_PERMISSION" tools:node="remove" />\n'
+        '    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />\n'
+        '    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" tools:node="remove" />\n'
+        '    <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE" tools:node="remove" />')
+    s = re.sub(r'<receiver\s+android:name="com\.adjust\.sdk\.AdjustPreinstallReferrerReceiver".*?</receiver>',
+        '<receiver android:name="com.adjust.sdk.AdjustPreinstallReferrerReceiver" tools:node="remove" />', s, flags=re.S)
+    return s
+edit(mm, strip_perms, "manifest: Adjust/AD_ID/c2dm/install-referrer removed")
+
+# ---- version name (artifact build leaves it null): "<Firefox base version>-neo"
+ver = (root / "browser/config/version.txt").read_text().strip()
+edit(bg, lambda s: s.replace('"${Config.releaseVersionName(project)}"', '"%s-neo"' % ver), "versionName = base version + -neo (%s)" % ver)
