@@ -1,11 +1,20 @@
 name: build-neo
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      patches:
+        description: apply Neo patches (true/false)
+        default: 'true'
+      only_x86:
+        description: build only x86_64 twin (true/false)
+        default: 'false'
 jobs:
   build:
     strategy:
       fail-fast: false
       matrix:
         target: [aarch64, x86_64]
+    if: ${{ !(inputs.only_x86 == 'true' && matrix.target == 'aarch64') }}
     runs-on: ubuntu-latest
     timeout-minutes: 340
     steps:
@@ -18,6 +27,7 @@ jobs:
       - name: Clone Mozilla source (shallow)
         run: git clone --depth 1 https://github.com/mozilla-firefox/firefox.git ff && git -C ff log -1 --format='%H %cd' | tee ff-rev.txt
       - name: Apply Neo patches + branding
+        if: ${{ inputs.patches != 'false' }}
         run: |
           pip install pillow
           python3 neo/patch.py ff
