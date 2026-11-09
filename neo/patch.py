@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Firefox Neo patches. Usage: patch.py <mozilla-source-root>. Every edit asserts it matched."""
-import re, sys, pathlib, glob
+import re, sys, pathlib, glob, os
+NAME = os.environ.get("NEO_NAME", "Neo Browser")
 root = pathlib.Path(sys.argv[1])
 fx = root / "mobile/android/fenix/app"
 
@@ -43,9 +44,9 @@ edit(st, sub1(r"defaultValue = \{ enableFxSuggest \}", "defaultValue = { false }
 
 # ---- names & About
 for f in [fx/"src/release/res/values/static_strings.xml", fx/"src/main/res/values/static_strings.xml", fx/"src/beta/res/values/static_strings.xml", fx/"src/nightly/res/values/static_strings.xml"]:
-    edit(f, sub1(r'(<string name="app_name" translatable="false">)[^<]*(</string>)', r'\1Firefox Neo\2'), "app_name -> Firefox Neo")
+    edit(f, sub1(r'(<string name="app_name" translatable="false">)[^<]*(</string>)', r'\1' + NAME + r'\2'), "app_name -> Firefox Neo")
 sm = fx/"src/main/res/values/strings.xml"
-edit(sm, sub1(r'(<string name="about_content"[^>]*>)[^<]*(</string>)', r'\1%1$s - Built by Jitesh (jiteshprakash.com.np). Built on the open-source Firefox engine from Mozilla, with telemetry removed.\2'), "About credit: Built by Jitesh")
+edit(sm, sub1(r'(<string name="about_content"[^>]*>)[^<]*(</string>)', r'\1%1$s - Built by Jitesh (jiteshprakash.com.np). Independent browser built on open-source code from Mozilla (Firefox and Gecko are trademarks of the Mozilla Foundation). Not affiliated with or endorsed by Mozilla. Telemetry removed.\2'), "About credit: Built by Jitesh")
 for f in glob.glob(str(fx/"src/main/res/values-*/strings.xml")):
     p = pathlib.Path(f); s = p.read_text(encoding="utf-8")
     n = re.sub(r'\s*<string name="about_content"[^>]*>.*?</string>', '', s, flags=re.S)

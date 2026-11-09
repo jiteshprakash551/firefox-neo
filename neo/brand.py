@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate Firefox Neo icons/wordmarks (replaces Mozilla Firefox logo art). Usage: brand.py <fenix app/src/release/res>"""
-import sys, pathlib, glob
+import sys, pathlib, glob, os
+NAME = os.environ.get("NEO_NAME", "Neo Browser")
 from PIL import Image, ImageDraw, ImageFont
 res = pathlib.Path(sys.argv[1])
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
@@ -21,7 +22,8 @@ def logo(size, bg=True, round_=False):
     d.text((c,c),"N",font=f,fill=C,anchor="mm")
     return im.resize((size,size),Image.LANCZOS)
 
-def wordmark(w,h,text="Firefox Neo",bg=None):
+def wordmark(w,h,text=None,bg=None):
+    text=text or NAME
     S=4
     im=Image.new("RGBA",(w*S,h*S),bg or (0,0,0,0)); d=ImageDraw.Draw(im)
     fs=int(h*S*0.55)
@@ -38,7 +40,7 @@ for f in glob.glob(str(res/"mipmap-*/ic_launcher.webp")):
 for f in glob.glob(str(res/"mipmap-*/ic_launcher_round.webp")):
     s=Image.open(f).size[0]; logo(s,round_=True).save(f,"WEBP",lossless=True)
 for f in glob.glob(str(res/"drawable*/ic_logo_wordmark_*.webp"))+glob.glob(str(res/"drawable*/ic_wordmark_text_*.webp")):
-    w,h=Image.open(f).size; t="Firefox Neo"+(" Private" if "private" in f else "")
+    w,h=Image.open(f).size; t=NAME+(" Private" if "private" in f else "")
     wordmark(w,h,t).save(f,"WEBP",lossless=True)
 for f in glob.glob(str(res/"drawable-nodpi/ic_wordmark_logo.webp")):
     w,h=Image.open(f).size; im=Image.new("RGBA",(w,h),(0,0,0,0)); l=logo(min(w,h)); im.paste(l,((w-l.size[0])//2,(h-l.size[1])//2),l); im.save(f,"WEBP",lossless=True)
