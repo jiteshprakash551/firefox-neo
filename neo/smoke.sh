@@ -2,7 +2,8 @@
 # Runs inside the emulator job. Installs the x86_64 twin APK, launches it, captures screenshots and logs.
 set -u
 mkdir -p smoke-out; cd "$GITHUB_WORKSPACE"
-APK=$(ls out/app-x86_64-release.apk)
+APK=${APK_OVERRIDE:-$(ls out/app-x86_64-release.apk)}
+SLOWW=${SLOW_WAIT:-0}
 $ANDROID_HOME/build-tools/*/aapt2 dump badging "$APK" | grep -E "package:|application-label:|launchable" | tee -a smoke-out/result.txt
 adb install -r "$APK" 2>&1 | tee -a smoke-out/result.txt
 PKG=np.com.jiteshprakash.neo
@@ -10,14 +11,14 @@ echo "PKG=$PKG" | tee -a smoke-out/result.txt
 adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS 2>/dev/null
 adb logcat -c
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 | tee -a smoke-out/result.txt
-sleep 30
+sleep $((30+SLOWW))
 adb exec-out screencap -p > smoke-out/01-first-launch.png
 adb shell uiautomator dump /sdcard/h.xml >/dev/null 2>&1; adb pull /sdcard/h.xml smoke-out/home-ui.xml >/dev/null 2>&1
 adb shell dumpsys activity activities | grep -m3 -i "mResumedActivity\|topResumedActivity" | tee -a smoke-out/result.txt
 adb shell pidof "$PKG" | tee -a smoke-out/result.txt
 # open a page (emulator has internet) 
 adb shell am start -a android.intent.action.VIEW -d "https://example.org" "$PKG" | tee -a smoke-out/result.txt
-sleep 20
+sleep $((20+SLOWW))
 adb exec-out screencap -p > smoke-out/02-example-org.png
 
 tap_text() { # tap first UI node whose text/content-desc matches $1 (regex)
