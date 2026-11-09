@@ -44,6 +44,11 @@ adb shell am start -a android.intent.action.VIEW -d "fenix://settings" "$PKG" | 
 adb exec-out screencap -p > smoke-out/04-settings.png
 for i in 1 2 3 4 5 6 7 8; do adb shell input swipe 160 500 160 100 250; done; sleep 1
 adb exec-out screencap -p > smoke-out/04b-settings-bottom.png
+tap_text "Data collection"
+adb exec-out screencap -p > smoke-out/04c-data-collection.png
+adb shell uiautomator dump /sdcard/d.xml >/dev/null 2>&1; adb pull /sdcard/d.xml smoke-out/data-collection-ui.xml >/dev/null 2>&1
+adb shell input keyevent KEYCODE_BACK; sleep 2
+for i in 1 2 3 4 5 6 7 8; do adb shell input swipe 160 500 160 100 250; done; sleep 1
 tap_text "About Neo"
 adb exec-out screencap -p > smoke-out/05-about.png
 adb shell input swipe 160 500 160 150 250; sleep 1

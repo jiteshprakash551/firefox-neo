@@ -1,0 +1,61 @@
+name: lint-neo
+on:
+  workflow_dispatch:
+    inputs:
+      patches:
+        description: apply Neo patches (true/false)
+        default: 'true'
+      ref:
+        description: Mozilla git ref (tag or branch) to build
+        default: FIREFOX_159_0_1_RELEASE
+      only_x86:
+        description: build only x86_64 twin (true/false)
+        default: 'false'
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64]
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk + swap
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/lib/android /usr/lib/jvm/temurin-8* 2>/dev/null || true
+          sudo swapoff -a; sudo fallocate -l 8G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+          df -h /; free -g
+      - name: Clone Mozilla source (shallow)
+        run: git clone --depth 1 --branch "${{ inputs.ref || 'FIREFOX_159_0_1_RELEASE' }}" https://github.com/mozilla-firefox/firefox.git ff && git -C ff log -1 --format='%H %cd' | tee ff-rev.txt
+      - name: Apply Neo patches + branding
+        if: ${{ inputs.patches != 'false' }}
+        run: |
+          pip install pillow
+          python3 neo/patch.py ff
+          python3 neo/brand.py ff/mobile/android/fenix/app/src/release/res
+      - name: Bootstrap (artifact mode)
+        run: |
+          cd ff && sed 's/aarch64-linux-android/${{ matrix.target }}-linux-android/' ../neo/mozconfig > mozconfig
+          for i in 1 2 3 4 5 6; do ./mach --no-interactive bootstrap --application-choice mobile_android_artifact_mode && break; echo "bootstrap retry $i"; sleep 60; done
+          test -d ~/.mozbuild
+          df -h /
+      - name: Build (artifact GeckoView)
+        run: cd ff && ./mach build
+      - name: Lint (release)
+        continue-on-error: true
+        run: cd ff && ./mach gradle -p mobile/android/fenix app:lintRelease 2>&1 | tail -60 | tee ../lint-tail.txt
+      - name: Unit tests (Settings, Onboarding, About)
+        continue-on-error: true
+        run: cd ff && ./mach gradle -p mobile/android/fenix app:testReleaseUnitTest --tests '*SettingsTest' --tests '*AboutFragment*' 2>&1 | tail -60 | tee ../test-tail.txt
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: neo-lint-tests
+          path: |
+            lint-tail.txt
+            test-tail.txt
+            ff/mobile/android/fenix/app/build/reports/lint-results-release.txt
+            ff/mobile/android/fenix/app/build/test-results/testReleaseUnitTest/*.xml
+          if-no-files-found: ignore

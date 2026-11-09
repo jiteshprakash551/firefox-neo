@@ -68,6 +68,17 @@ edit(st, lambda s: s.replace("default = { appContext.components.nimbus.sdk.rollo
 mw = fx/"src/main/java/org/mozilla/fenix/messaging/MessageNotificationWorker.kt"
 edit(mw, lambda s: s.replace("        val nimbus = context.components.nimbus\n\n        // Refresh messages", "        val nimbus = context.components.nimbus\n        if (!context.components.settings.isExperimentationEnabled) return Result.success()\n\n        // Refresh messages", 1), "MessageNotificationWorker: no Nimbus fetch when experimentation off")
 
+# ---- About page links: point at this project, not Mozilla's release notes/support/privacy pages
+ab = fx/"src/main/java/org/mozilla/fenix/settings/about/AboutFragment.kt"
+def about(s):
+    n = s.replace("SupportUtils.WHATS_NEW_URL,", '"https://github.com/jiteshprakash551/neo-browser",', 1)
+    n = n.replace("getString(R.string.about_whats_new, getString(R.string.firefox)),", '"Source code and changes",', 1)
+    n = n.replace("SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.HELP),", '"https://github.com/jiteshprakash551/neo-browser/issues",', 1)
+    n = n.replace("SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVACY_NOTICE),", '"https://github.com/jiteshprakash551/neo-browser/blob/main/PRIVACY.md",', 1)
+    assert n.count("jiteshprakash551/neo-browser") == 3
+    return n
+edit(ab, about, "About links -> Neo project (source, support, privacy)")
+
 # ---- names & About
 for f in [fx/"src/release/res/values/static_strings.xml", fx/"src/main/res/values/static_strings.xml", fx/"src/beta/res/values/static_strings.xml", fx/"src/nightly/res/values/static_strings.xml"]:
     edit(f, sub1(r'(<string name="app_name" translatable="false">)[^<]*(</string>)', r'\1' + NAME + r'\2'), "app_name -> Firefox Neo")
