@@ -75,7 +75,9 @@ def about(s):
     n = n.replace("getString(R.string.about_whats_new, getString(R.string.firefox)),", '"Source code and changes",', 1)
     n = n.replace("SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.HELP),", '"https://github.com/jiteshprakash551/neo-browser/issues",', 1)
     n = n.replace("SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVACY_NOTICE),", '"https://github.com/jiteshprakash551/neo-browser/blob/main/PRIVACY.md",', 1)
+    n = n.replace("SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS),", '"https://www.mozilla.org/MPL/2.0/",', 1)
     assert n.count("jiteshprakash551/neo-browser") == 3
+    assert '"https://www.mozilla.org/MPL/2.0/"' in n
     return n
 edit(ab, about, "About links -> Neo project (source, support, privacy)")
 
