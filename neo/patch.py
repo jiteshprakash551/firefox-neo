@@ -83,7 +83,13 @@ edit(ab, about, "About links -> Neo project (source, support, privacy)")
 for f in [fx/"src/release/res/values/static_strings.xml", fx/"src/main/res/values/static_strings.xml", fx/"src/beta/res/values/static_strings.xml", fx/"src/nightly/res/values/static_strings.xml"]:
     edit(f, sub1(r'(<string name="app_name" translatable="false">)[^<]*(</string>)', r'\1' + NAME + r'\2'), "app_name -> Firefox Neo")
 sm = fx/"src/main/res/values/strings.xml"
-edit(sm, sub1(r'(<string name="about_content"[^>]*>)[^<]*(</string>)', r'\1%1$s - Built by Jitesh (jiteshprakash.com.np). Independent browser built on open-source code from Mozilla (Firefox and Gecko are trademarks of the Mozilla Foundation). Not affiliated with or endorsed by Mozilla. Telemetry removed.\2'), "About credit: Built by Jitesh")
+edit(sm, sub1(r'(<string name="about_content"[^>]*>)[^<]*(</string>)', r'\1Built by Jitesh (jiteshprakash.com.np).\\n\\nAn independent browser built on open-source code from Mozilla. Firefox and Gecko are trademarks of the Mozilla Foundation. Neo Browser is not affiliated with or endorsed by Mozilla.\\n\\nTelemetry and crash-report uploads are switched off by default.\2'), "About credit: Built by Jitesh")
+al = fx/"src/main/res/layout/fragment_about.xml"
+def about_layout(s):
+    i = s.index('android:id="@+id/about_content"') - 1; j = s.index("/>", i)
+    blk = s[i:j].replace('android:layout_width="wrap_content"', 'android:layout_width="0dp"', 1).replace('layout_constraintWidth_percent="0.8"', 'layout_constraintWidth_percent="0.92"', 1).replace('style="@style/Header16TextStyle"', 'style="@style/AboutHeaderContentText"', 1)
+    return s[:i] + blk + s[j:]
+edit(al, about_layout, "About layout: wide readable credit block")
 for f in glob.glob(str(fx/"src/main/res/values-*/strings.xml")):
     p = pathlib.Path(f); s = p.read_text(encoding="utf-8")
     n = re.sub(r'\s*<string name="about_content"[^>]*>.*?</string>', '', s, flags=re.S)

@@ -22,6 +22,15 @@ def logo(size, bg=True, round_=False):
     d.text((c,c),"N",font=f,fill=C,anchor="mm")
     return im.resize((size,size),Image.LANCZOS)
 
+def wordmark_fit(h,text=None):
+    text=text or NAME
+    S=4; fs=int(h*S*0.62); f=ImageFont.truetype(FONT,fs)
+    tmp=ImageDraw.Draw(Image.new("RGBA",(10,10)))
+    tw=int(tmp.textlength(text,font=f)); W=tw+int(h*S*0.3)
+    im=Image.new("RGBA",(W,h*S),(0,0,0,0)); d=ImageDraw.Draw(im)
+    d.text((W/2,h*S/2),text,font=f,fill=(235,238,255,255),anchor="mm")
+    return im.resize((W//S,h),Image.LANCZOS)
+
 def wordmark(w,h,text=None,bg=None):
     text=text or NAME
     S=4
@@ -30,9 +39,6 @@ def wordmark(w,h,text=None,bg=None):
     f=ImageFont.truetype(FONT,fs)
     while d.textlength(text,font=f)>w*S*0.92: fs-=4; f=ImageFont.truetype(FONT,fs)
     d.text((w*S/2,h*S/2),text,font=f,fill=(235,238,255,255),anchor="mm")
-    # accent underline
-    tw=d.textlength(text,font=f); y=h*S/2+fs*0.62
-    d.rounded_rectangle((w*S/2-tw/2,y,w*S/2+tw/2,y+max(4,h*S*0.03)),radius=4,fill=V)
     return im.resize((w,h),Image.LANCZOS)
 
 for f in glob.glob(str(res/"mipmap-*/ic_launcher.webp")):
@@ -41,7 +47,7 @@ for f in glob.glob(str(res/"mipmap-*/ic_launcher_round.webp")):
     s=Image.open(f).size[0]; logo(s,round_=True).save(f,"WEBP",lossless=True)
 for f in glob.glob(str(res/"drawable*/ic_logo_wordmark_*.webp"))+glob.glob(str(res/"drawable*/ic_wordmark_text_*.webp")):
     w,h=Image.open(f).size; t=NAME
-    wordmark(w,h,t).save(f,"WEBP",lossless=True)
+    (wordmark_fit(h,t) if "ic_wordmark_text" in f else wordmark(w,h,t)).save(f,"WEBP",lossless=True)
 for f in glob.glob(str(res/"drawable-nodpi/ic_wordmark_logo.webp")):
     w,h=Image.open(f).size; im=Image.new("RGBA",(w,h),(0,0,0,0)); l=logo(min(w,h)); im.paste(l,((w-l.size[0])//2,(h-l.size[1])//2),l); im.save(f,"WEBP",lossless=True)
 for f in glob.glob(str(res/"drawable-*/fenix_search_widget.webp")):
