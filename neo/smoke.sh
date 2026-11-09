@@ -12,6 +12,7 @@ adb logcat -c
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 | tee -a smoke-out/result.txt
 sleep 30
 adb exec-out screencap -p > smoke-out/01-first-launch.png
+adb shell uiautomator dump /sdcard/h.xml >/dev/null 2>&1; adb pull /sdcard/h.xml smoke-out/home-ui.xml >/dev/null 2>&1
 adb shell dumpsys activity activities | grep -m3 -i "mResumedActivity\|topResumedActivity" | tee -a smoke-out/result.txt
 adb shell pidof "$PKG" | tee -a smoke-out/result.txt
 # open a page (emulator has internet) 
@@ -35,14 +36,18 @@ PY
 UIDN=$(adb shell dumpsys package "$PKG" | sed -n 's/.*userId=\([0-9]*\).*/\1/p' | head -1); echo "uid=$UIDN" >> smoke-out/result.txt
 adb shell cat /proc/net/tcp6 /proc/net/tcp | awk -v u="$UIDN" '$8==u {print "conn", $3, $4}' | sort | uniq -c > smoke-out/connections-after-load.txt
 adb shell am start -a android.intent.action.VIEW -d "https://example.com" "$PKG" >/dev/null; sleep 8
-tap_text "menu"
+adb shell input tap 296 55; sleep 3
 adb exec-out screencap -p > smoke-out/03-menu.png
-tap_text "^settings"
-for i in 1 2 3 4 5 6; do adb shell input swipe 540 1800 540 600 300; done; sleep 1
+adb shell uiautomator dump /sdcard/m.xml >/dev/null 2>&1; adb pull /sdcard/m.xml smoke-out/menu-ui.xml >/dev/null 2>&1
+adb shell input keyevent KEYCODE_BACK; sleep 1
+adb shell am start -a android.intent.action.VIEW -d "fenix://settings" "$PKG" | tee -a smoke-out/result.txt; sleep 5
+adb exec-out screencap -p > smoke-out/04-settings.png
+for i in 1 2 3 4 5 6 7 8; do adb shell input swipe 160 500 160 100 250; done; sleep 1
+adb exec-out screencap -p > smoke-out/04b-settings-bottom.png
 tap_text "about"
-adb exec-out screencap -p > smoke-out/04-about.png
-adb shell input swipe 540 1800 540 600 300; sleep 1
-adb exec-out screencap -p > smoke-out/05-about-scrolled.png
+adb exec-out screencap -p > smoke-out/05-about.png
+adb shell input swipe 160 500 160 150 250; sleep 1
+adb exec-out screencap -p > smoke-out/06-about-scrolled.png
 adb shell input keyevent KEYCODE_BACK; adb shell input keyevent KEYCODE_BACK; adb shell input keyevent KEYCODE_BACK; sleep 2
 adb shell am start -a android.intent.action.VIEW -d "about:config" "$PKG" >/dev/null; sleep 3
 adb logcat -d > smoke-out/logcat.txt
