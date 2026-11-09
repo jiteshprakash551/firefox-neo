@@ -61,3 +61,20 @@ def vec(color_ring,color_n):
 mono = res.parent.parent/"main/res/drawable/ic_launcher_monochrome.xml"
 if mono.exists(): mono.write_text(vec("#FF000000","#FF000000"))
 print("branding done")
+
+# fox art -> Neo mark
+def mark(size, ring, n):
+    return f'''<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="{size}dp" android:height="{size}dp" android:viewportWidth="108" android:viewportHeight="108">
+  <path android:pathData="M54,54m-34,0a34,34 0,1 1,68 0a34,34 0,1 1,-68 0" android:strokeColor="{ring}" android:strokeWidth="6" android:fillColor="#00000000"/>
+  <path android:pathData="M41,71L41,37L67,71L67,37" android:strokeColor="{n}" android:strokeWidth="7" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"/>
+</vector>
+'''
+main = res.parent.parent/"main/res"
+for name, size, ring, n in [("ic_firefox",48,"#7C5CFF","#29E0FF"),("ic_splash_logo",108,"#7C5CFF","#29E0FF"),("ic_status_logo",24,"#FFFFFFFF","#FFFFFFFF"),
+    ("ic_onboarding_welcome",120,"#7C5CFF","#29E0FF"),("expressive_firefox",96,"#7C5CFF","#29E0FF"),("illustration_fox_box_inside_light",120,"#7C5CFF","#29E0FF"),
+    ("fox_exclamation_alert",96,"#7C5CFF","#29E0FF"),("fox_ai_on_state",96,"#7C5CFF","#29E0FF"),("fox_expressive_face_tail",96,"#7C5CFF","#29E0FF")]:
+    for d in glob.glob(str(main/"drawable*")):
+        pth = pathlib.Path(d)/(name+".xml")
+        if pth.exists(): pth.write_text(mark(size,ring,n))
+print("fox art replaced")

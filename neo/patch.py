@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Firefox Neo patches. Usage: patch.py <mozilla-source-root>. Every edit asserts it matched."""
+"""Neo Browser patches. Usage: patch.py <mozilla-source-root>. Every edit asserts it matched."""
 import re, sys, pathlib, glob, os
 NAME = os.environ.get("NEO_NAME", "Neo Browser")
 root = pathlib.Path(sys.argv[1])
@@ -41,6 +41,17 @@ edit(st, sub1(r"(R\.string\.pref_key_enable_contile\),\s*default = )true", r"\1f
 edit(st, sub1(r"(defaultValue = \{ )homescreenSections\[HomeScreenSection\.POCKET\] == true( \},)", r"\1false\2"), "sponsored/Pocket stories default OFF")
 edit(st, sub1(r"(featureFlag = ContentRecommendationsFeatureHelper)", r"\1"), "noop-anchor") if False else None
 edit(st, sub1(r"defaultValue = \{ enableFxSuggest \}", "defaultValue = { false }"), "sponsored suggestions default OFF")
+
+# ---- user-visible "Firefox" -> "Neo" in all string resources (before About text is set)
+cnt = 0
+for f in glob.glob(str(fx/"src/main/res/values*/strings.xml")):
+    p = pathlib.Path(f); t = p.read_text(encoding="utf-8")
+    n = t.replace("Firefox", "Neo")
+    if n != t: p.write_text(n, encoding="utf-8"); cnt += 1
+assert cnt > 50, "string rebrand touched too few files"
+print("ok: Firefox->Neo in", cnt, "string files")
+# ---- Mozilla-specific onboarding (Mozilla ToU, data sharing, marketing, sync) is skipped
+edit(st, lambda s: s.replace("if (isBenchmarkBuild && !forceOnboardingForBenchmark) {", "if (isBenchmarkBuild || !forceOnboardingForBenchmark) {"), "skip Mozilla onboarding flow")
 
 # ---- names & About
 for f in [fx/"src/release/res/values/static_strings.xml", fx/"src/main/res/values/static_strings.xml", fx/"src/beta/res/values/static_strings.xml", fx/"src/nightly/res/values/static_strings.xml"]:
