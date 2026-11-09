@@ -46,7 +46,8 @@ edit(st, sub1(r"defaultValue = \{ enableFxSuggest \}", "defaultValue = { false }
 cnt = 0
 for f in glob.glob(str(fx/"src/main/res/values*/strings.xml")):
     p = pathlib.Path(f); t = p.read_text(encoding="utf-8")
-    n = t.replace("Firefox", "Neo")
+    # keep truthful names of Mozilla-run services / legal docs; everything else becomes the app name
+    n = re.sub(r"Firefox(?! (?:Account|account|Relay|Monitor|Suggest|Sync|Terms|Privacy|Focus|Klar|Accounts|Send|Color|Colors))", "Neo", t)
     if n != t: p.write_text(n, encoding="utf-8"); cnt += 1
 assert cnt > 50, "string rebrand touched too few files"
 print("ok: Firefox->Neo in", cnt, "string files")
