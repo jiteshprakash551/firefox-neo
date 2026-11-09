@@ -5,6 +5,9 @@ on:
       patches:
         description: apply Neo patches (true/false)
         default: 'true'
+      ref:
+        description: Mozilla git ref (tag or branch) to build
+        default: FIREFOX_159_0_1_RELEASE
       only_x86:
         description: build only x86_64 twin (true/false)
         default: 'false'
@@ -24,7 +27,7 @@ jobs:
           sudo swapoff -a; sudo fallocate -l 8G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
           df -h /; free -g
       - name: Clone Mozilla source (shallow)
-        run: git clone --depth 1 https://github.com/mozilla-firefox/firefox.git ff && git -C ff log -1 --format='%H %cd' | tee ff-rev.txt
+        run: git clone --depth 1 --branch "${{ inputs.ref || 'FIREFOX_159_0_1_RELEASE' }}" https://github.com/mozilla-firefox/firefox.git ff && git -C ff log -1 --format='%H %cd' | tee ff-rev.txt
       - name: Apply Neo patches + branding
         if: ${{ inputs.patches != 'false' }}
         run: |
