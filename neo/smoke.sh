@@ -2,7 +2,7 @@
 # Runs inside the emulator job. Installs the x86_64 twin APK, launches it, captures screenshots and logs.
 set -u
 mkdir -p smoke-out; cd "$GITHUB_WORKSPACE"
-APK=$(ls out/*.apk | head -1); echo "APK: $APK" | tee smoke-out/result.txt
+APK=$(ls out/app-x86_64-release.apk)
 $ANDROID_HOME/build-tools/*/aapt2 dump badging "$APK" | grep -E "package:|application-label:|launchable" | tee -a smoke-out/result.txt
 adb install -r "$APK" 2>&1 | tee -a smoke-out/result.txt
 PKG=$(aapt2_pkg=$($ANDROID_HOME/build-tools/*/aapt2 dump badging "$APK" | sed -n "s/package: name='\([^']*\)'.*/\1/p"); echo $aapt2_pkg)
